@@ -1,0 +1,19 @@
+Tasks:
+1 --> object detection and classification in real time
+2 --> behaviour classification
+3 --> creating custom datasets + using existing datasets
+4 --> training a model based on the datasets
+5 --> backend for handling database and real time communication with the 
+6 --> frontend for video capturing and streaming 
+    --> 1st page: records page where previous records of exams are displayed
+    --> 2nd page: monitor page where real-time monitoring occurs 
+7 --> Testing the model
+
+
+possible Frameworks and Libraries we could use: 
+1 --> OpenCV: For video processing and bounding box visualization.
+2 --> YOLOv8: For object detection and tracking.
+3 --> MediaPipe: For body pose and gesture analysis.
+4 --> TensorFlow/PyTorch: For training custom models.
+5 --> Flask/FastAPI: For creating APIs.
+6 --> Socket.IO/WebRTC: For real-time video and data streaming.
