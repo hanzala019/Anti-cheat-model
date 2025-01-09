@@ -10,7 +10,10 @@ mpFaceMesh = mp.solutions.face_mesh
 face_mesh = mpFaceMesh.FaceMesh()
 
 # Access webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
+
+# flag to initialize nose bounding box
+first_pose_detected = False
 
 while True:
     try:
@@ -59,6 +62,24 @@ while True:
             shoulder_to_shoulder_distance = midpoint_shoulder_to_shoulder_distance * 2
             percentage = (right_shoulder_to_nose_x / shoulder_to_shoulder_distance) * 100
 
+
+            # create nose bounding box if first detection
+            if not first_pose_detected:
+                nose_restriction_box = [(nose_point[0] - int(shoulder_to_shoulder_distance * 0.8), nose_point[1] + int(shoulder_to_shoulder_distance * 0.50)),
+                                        (nose_point[0] + int(shoulder_to_shoulder_distance * 0.8), nose_point[1] - int(shoulder_to_shoulder_distance * 0.50))]
+                first_pose_detected = True 
+            cv2.rectangle(img, nose_restriction_box[0], nose_restriction_box[1], (0, 255, 0), 1)
+            
+            lean_direction = ""
+            if nose_point[0] < nose_restriction_box[0][0]:
+                lean_direction += "right "
+            if nose_point[0] > nose_restriction_box[1][0]:
+                lean_direction += "left "
+            if nose_point[1] > nose_restriction_box[0][1]:
+                lean_direction += "forward "
+            if nose_point[1] < nose_restriction_box[1][1]:
+                lean_direction += "back "
+
             # adjustment_angle = 180 - math.degrees(math.asin( (right_shoulder_point[1]-midpoint_of_shoulders_point[1])/midpoint_shoulder_to_shoulder_distance ))
             # cv2.ellipse(img, midpoint_of_shoulders_point, (25,25), adjustment_angle, 0, right_angle, (255, 255, 255), 1)
 
@@ -68,6 +89,7 @@ while True:
             # cv2.putText(img, f"Midpoint: {int(midpoint_shoulder_to_shoulder_distance)}", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
             # cv2.putText(img, f"{int(right_angle)}", (midpoint_of_shoulders_point[0] - 10 ,midpoint_of_shoulders_point[1] + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
             cv2.putText(img, f"{int(percentage)}%", (midpoint_of_shoulders_point[0], midpoint_of_shoulders_point[1] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+            cv2.putText(img, f"Leaning: {str(lean_direction)}", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
             
             # Draw pose landmarks
             mp_draw.draw_landmarks(img, pose_results.pose_landmarks, mpPose.POSE_CONNECTIONS)
