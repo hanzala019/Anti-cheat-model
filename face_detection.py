@@ -10,7 +10,7 @@ mpFaceMesh = mp.solutions.face_mesh
 face_mesh = mpFaceMesh.FaceMesh()
 
 # Access webcam
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 while True:
     try:
@@ -44,28 +44,36 @@ while True:
             # cv2.circle(img, nose_point, 5, (255, 0, 0), 2)
             # cv2.circle(img, left_shoulder_point, 5, (0, 255, 0), 2)
             # cv2.circle(img, right_shoulder_point, 5, (0, 255, 0), 2)
-            cv2.circle(img, midpoint_of_shoulders_point, 5, (0, 0, 255), 2)
-            cv2.line(img, midpoint_of_shoulders_point, nose_point, (255,255,255), 1)
+            # cv2.circle(img, midpoint_of_shoulders_point, 5, (0, 0, 255), 2)
+            # cv2.line(img, midpoint_of_shoulders_point, nose_point, (255,255,255), 1)
 
             # Calculate distances and angles
             # left_shoulder_to_nose_distance = math.sqrt((nose_point[0] - left_shoulder_point[0])**2 + (nose_point[1] - left_shoulder_point[1])**2)
-            right_shoulder_to_nose_distance = math.sqrt((nose_point[0] - right_shoulder_point[0])**2 + (nose_point[1] - right_shoulder_point[1])**2)
-            midpoint_shoulder_to_nose_distance = math.sqrt((nose_point[0] - midpoint_of_shoulders_point[0])**2 + (nose_point[1] - midpoint_of_shoulders_point[1])**2)
+            # right_shoulder_to_nose_distance = math.sqrt((nose_point[0] - right_shoulder_point[0])**2 + (nose_point[1] - right_shoulder_point[1])**2)
+            # midpoint_shoulder_to_nose_distance = math.sqrt((nose_point[0] - midpoint_of_shoulders_point[0])**2 + (nose_point[1] - midpoint_of_shoulders_point[1])**2)
             midpoint_shoulder_to_shoulder_distance = math.sqrt((right_shoulder_point[0] - midpoint_of_shoulders_point[0])**2 + (right_shoulder_point[1] - midpoint_of_shoulders_point[1])**2)
 
-            right_angle = math.degrees(math.acos((midpoint_shoulder_to_nose_distance**2 + midpoint_shoulder_to_shoulder_distance**2 - right_shoulder_to_nose_distance**2) / (2 * midpoint_shoulder_to_nose_distance * midpoint_shoulder_to_shoulder_distance)))
+            # right_angle = math.degrees(math.acos((midpoint_shoulder_to_nose_distance**2 + midpoint_shoulder_to_shoulder_distance**2 - right_shoulder_to_nose_distance**2) / (2 * midpoint_shoulder_to_nose_distance * midpoint_shoulder_to_shoulder_distance)))
             
-            adjustment_angle = 180 - math.degrees(math.asin( (right_shoulder_point[1]-midpoint_of_shoulders_point[1])/midpoint_shoulder_to_shoulder_distance ))
-            cv2.ellipse(img, midpoint_of_shoulders_point, (25,25), adjustment_angle, 0, right_angle, (255, 255, 255), 1)
+            right_shoulder_to_nose_x = abs(right_shoulder_point[0] - nose_point[0])
+            shoulder_to_shoulder_distance = midpoint_shoulder_to_shoulder_distance * 2
+            percentage = (right_shoulder_to_nose_x / shoulder_to_shoulder_distance) * 100
+
+            # adjustment_angle = 180 - math.degrees(math.asin( (right_shoulder_point[1]-midpoint_of_shoulders_point[1])/midpoint_shoulder_to_shoulder_distance ))
+            # cv2.ellipse(img, midpoint_of_shoulders_point, (25,25), adjustment_angle, 0, right_angle, (255, 255, 255), 1)
 
             # Display measurements
             # cv2.putText(img, f"Left Distance: {int(left_shoulder_to_nose_distance)}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
             # cv2.putText(img, f"Right Distance: {int(right_shoulder_to_nose_distance)}", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
             # cv2.putText(img, f"Midpoint: {int(midpoint_shoulder_to_shoulder_distance)}", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
-            cv2.putText(img, f"{int(right_angle)}", (midpoint_of_shoulders_point[0] - 10 ,midpoint_of_shoulders_point[1] + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-
+            # cv2.putText(img, f"{int(right_angle)}", (midpoint_of_shoulders_point[0] - 10 ,midpoint_of_shoulders_point[1] + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+            cv2.putText(img, f"{int(percentage)}%", (midpoint_of_shoulders_point[0], midpoint_of_shoulders_point[1] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+            
             # Draw pose landmarks
             mp_draw.draw_landmarks(img, pose_results.pose_landmarks, mpPose.POSE_CONNECTIONS)
+
+            intercept_point_y = int(right_shoulder_point[1] + (percentage / 100) * (left_shoulder_point[1]-right_shoulder_point[1]))
+            cv2.line(img, right_shoulder_point, (nose_point[0], intercept_point_y), (0, 255, 0), 4)
 
         if face_results.multi_face_landmarks:
             for face_landmarks in face_results.multi_face_landmarks:
@@ -95,8 +103,8 @@ while True:
         # Break on ESC key
         if cv2.waitKey(1) & 0xFF == 27:
             break
-    except:
-        print("missing pose landmarks caused a math error in distance or angle calculation.")
+    except Exception as e:
+        print(e)
 
 cap.release()
 cv2.destroyAllWindows()
